@@ -1,5 +1,6 @@
 const express=require('express');
 const app =express();
+const ObjectId = require("mongodb").ObjectId;
 const { MongoClient } = require('mongodb');
 const port=process.env.PORT || 5000
 const cors =require('cors')
@@ -24,6 +25,7 @@ async function run(){
         const database=client.db('carBazar');
         const homeCar=database.collection('homeCar');
         const exploreCar=database.collection('exploreCar');
+        const orders =database.collection("orders");
 
         app.get('/homeCars', async (req, res) => {
             const cursor = homeCar.find({});
@@ -35,6 +37,23 @@ async function run(){
             const result = await cursor.toArray();
             res.send(result);
         });
+        app.get('/singleCar/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const car = await homeCar.findOne(query);
+            res.json(car);
+        })
+        app.get('/singleCars/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const cars = await exploreCar.findOne(query);
+            res.json(cars);
+        })
+
+        app.post("/addOrders", async (req, res) => {
+            const result = await orders.insertOne(req.body);
+            res.send(result);
+          });
     }
     finally{
         // await client.close();

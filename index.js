@@ -27,6 +27,7 @@ async function run(){
         const exploreCar=database.collection('exploreCar');
         const orders =database.collection("orders");
         const users=database.collection("users");
+        const reviews=database.collection("reviews")
 
         //get Home ui car
         app.get('/homeCars', async (req, res) => {
@@ -58,11 +59,44 @@ async function run(){
             res.json(cars);
         })
 
+         // Manage all Products
+         app.get('/exploreCar',async(req,res)=>{
+             const result=await exploreCar.find({}).toArray();
+             res.send(result);
+         })
+
+         // Manage all Orders
+         app.get('/orders',async (req,res)=>{
+            const result=await orders.find({}).toArray();
+            res.send(result);
+        })
+
+        //shipped a proudct
+        app.put('/orders/:id',async(req,res)=>{
+            const id=req.params.id
+            const query={_id:ObjectId(id)}
+            const updateDoc={
+                $set:{status:'shipped'}
+            };
+            const result=await orders.updateOne(query,updateDoc);
+            console.log(result);
+            res.json(result)
+        })
+
+
+         //Delete single product
+         app.delete('/exploreCar/:id',async(req,res)=>{
+             const id=req.params.id
+             const query={_id:ObjectId(id)}
+             const result=await exploreCar.deleteOne(query)
+             res.send(result);
+         })
+
+
         //get Oneuser order
         app.get('/orders/:email',async (req,res)=>{
             const email={ email: req.params.email }
             const result=await orders.find(email).toArray();
-            console.log(result);
             res.send(result);
         })
 
@@ -77,9 +111,17 @@ async function run(){
         // add review
         app.post("/reviews", async (req, res) => {
             const review=req.body
-            const result = await orders.insertOne(review);
+            const result = await reviews.insertOne(review);
             res.send(result);
           });
+          
+          // see reviews in home ui
+          app.get('/reviews',async(req,res)=>{
+              const cursor=reviews.find({})
+              const result=await cursor.toArray();
+              res.send(result);
+          })
+
         // Add Car
         app.post("/addCar", async (req, res) => {
             const addCar=req.body
@@ -117,7 +159,7 @@ async function run(){
             res.json(result);
         });
 
-          //delete user order
+          //delete an user order
           app.delete('/orders/:id',async(req,res)=>{
             const id=req.params.id;
             const query={_id: ObjectId(id)}
